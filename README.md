@@ -65,9 +65,7 @@ To set up the project locally, follow these steps:
 ├── lib/
 │   ├── schemas.ts                    # Zod schemas for type validation
 │   ├── store/
-│   │   └── workoutStore.ts           # Zustand state management
-│   └── utils/
-│       └── workoutPlanHelpers.ts     # Helper functions
+│       └── workoutStore.ts           # Zustand state management         
 └── public/
 ```
 
