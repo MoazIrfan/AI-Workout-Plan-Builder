@@ -83,6 +83,7 @@ export default function PlanPage() {
       
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-8">
+        
         {/* Week Selector */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {currentPlan.weeks.map((week) => (

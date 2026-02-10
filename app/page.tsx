@@ -30,10 +30,10 @@ export default function PromptPage() {
     clearPlan()
     setGenerating(true)
     
-    // Immediately navigate to the plan page to show skeleton
+    // Navigate to the plan page to show skeleton
     router.push('/plan')
     
-    // Make the API call in the background
+    // Make the API call
     try {
       const response = await fetch('/api/generate-plan', {
         method: 'POST',
@@ -51,7 +51,7 @@ export default function PromptPage() {
       
       const plan: WorkoutPlan = data.data
       
-      // Save the plan to Zustand (this also sets isGenerating to false)
+      // Save the plan to Zustand
       setPlan(plan, prompt)
       
       toast.success('Workout plan generated successfully!')
@@ -83,6 +83,7 @@ export default function PromptPage() {
           </p>
         </div>
         
+
         <form onSubmit={handleSubmit} className="w-full">
           <div className="bg-white rounded-lg shadow-sm border px-2 py-3">
             <Textarea
@@ -125,6 +126,8 @@ export default function PromptPage() {
 
           </div>
         </form>
+
+
       </div>
     </div>
   )
