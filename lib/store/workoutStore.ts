@@ -10,11 +10,12 @@ interface WorkoutStore {
   setPlan: (plan: WorkoutPlan, prompt: string) => void
   clearPlan: () => void
   setGenerating: (isGenerating: boolean) => void
+  deleteCircuit: (weekNumber: number, dayNumber: number, circuitIndex: number) => void
 }
 
 export const useWorkoutStore = create<WorkoutStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       currentPlan: null,
       currentPrompt: null,
       isGenerating: false,
@@ -22,7 +23,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
       setPlan: (plan, prompt) => set({ 
         currentPlan: plan, 
         currentPrompt: prompt,
-        isGenerating: false
+        isGenerating: false 
       }),
       
       clearPlan: () => set({ 
@@ -32,15 +33,35 @@ export const useWorkoutStore = create<WorkoutStore>()(
       }),
       
       setGenerating: (isGenerating) => set({ isGenerating }),
+      
+      deleteCircuit: (weekNumber, dayNumber, circuitIndex) => {
+        const currentPlan = get().currentPlan
+        if (!currentPlan) return
+        
+        const updatedPlan = {
+          ...currentPlan,
+          weeks: currentPlan.weeks.map(week => 
+            week.weekNumber === weekNumber
+              ? {
+                  ...week,
+                  days: week.days.map(day =>
+                    day.dayNumber === dayNumber
+                      ? {
+                          ...day,
+                          circuits: day.circuits?.filter((_, idx) => idx !== circuitIndex),
+                        }
+                      : day
+                  ),
+                }
+              : week
+          ),
+        }
+        
+        set({ currentPlan: updatedPlan })
+      },
     }),
     {
-      name: 'workout-plan-storage', // localStorage key name
-      // Only persist the plan and prompt, not the loading state
-      partialPersist: {
-        currentPlan: true,
-        currentPrompt: true,
-        isGenerating: false, // Never persist loading state
-      },
+      name: 'workout-plan-storage',
     }
   )
 )

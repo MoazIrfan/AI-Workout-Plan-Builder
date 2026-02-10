@@ -6,8 +6,7 @@ import { workoutPlanSchema, WorkoutPlan } from '@/lib/schemas'
 
 export const dynamic = 'force-dynamic'
 
-// Simple helper to extract week count from the user's prompt
-// If they mention a number of weeks, we use that. Otherwise, default to 2.
+// Extract week count from the user's prompt If they mention a number of weeks, we use that. Otherwise, default to 2.
 function getWeekCount(prompt: string): number {
   const lowerPrompt = prompt.toLowerCase()
   
@@ -18,7 +17,6 @@ function getWeekCount(prompt: string): number {
     return Math.min(weeks, 12) // Cap at 12 weeks maximum
   }
   
-  // Default to 2 weeks if nothing specified
   return 2
 }
 
@@ -48,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     Generate a complete program with:
     - Exactly {weekCount} weeks
-    - 3-7 days per week with rest days where appropriate  
+    - 3-7 days per week with rest days where appropriate
     - Exercises organized into circuits labeled A, B, C, D, E
     - For each exercise: name, number of sets, reps (like "12" or "12,10,8"), and brief helpful notes
 

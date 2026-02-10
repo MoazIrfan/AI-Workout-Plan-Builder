@@ -9,7 +9,7 @@ import { WorkoutPlanSkeleton } from '@/components/ui/WorkoutPlanSkeleton'
 
 export default function PlanPage() {
   const router = useRouter()
-  const { currentPlan, isGenerating, clearPlan } = useWorkoutStore()
+  const { currentPlan, isGenerating, clearPlan, deleteCircuit } = useWorkoutStore()
   const [selectedWeek, setSelectedWeek] = useState(1)
   const [isHydrated, setIsHydrated] = useState(false)
   
@@ -129,9 +129,13 @@ export default function PlanPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
-                            <button className="text-gray-400 hover:text-gray-600">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            <button
+                              onClick={() => deleteCircuit(selectedWeek, day.dayNumber, index)}
+                              className="text-gray-400 hover:text-red-600 transition-colors"
+                              title="Delete exercise"
+                            >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                           </div>
                         </td>
                       </tr>
