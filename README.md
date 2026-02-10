@@ -6,6 +6,8 @@ An intelligent fitness application that generates personalized workout plans usi
 
 https://ai-workout-plan-builder.vercel.app/
 
+[![📟](https://raw.githubusercontent.com/MoazIrfan/AI-Workout-Plan-Builder/main/.github/AI%20Workout%20Plan%20Builder.gif)](./../../)
+
 
 ## Installation
 
