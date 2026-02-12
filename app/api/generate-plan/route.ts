@@ -42,15 +42,45 @@ export async function POST(request: NextRequest) {
     
     // Create a simple, clear prompt template
     const promptTemplate = new PromptTemplate({
-      template: `Create a {weekCount}-week workout program based on this request: {userPrompt}
+      template: `You are a fitness trainer creating a workout program. Generate ACTUAL workout plan data, not a schema.
 
-    Generate a complete program with:
-    - Exactly {weekCount} weeks
-    - 3-7 days per week with rest days where appropriate
-    - Exercises organized into circuits labeled A, B, C, D, E
-    - For each exercise: name, number of sets, reps (like "12" or "12,10,8"), and brief helpful notes
+      User request: {userPrompt}
 
-    {formatInstructions}`,
+      Create a {weekCount} week program with:
+      - 3-7 days per week with rest days
+      - Exercises in circuits (A, B, C, D, E)
+      - Each exercise needs: name, sets (number), reps (string), and notes
+
+      IMPORTANT: Return the actual workout plan with real exercise names and values, NOT a JSON schema template.
+
+      {formatInstructions}
+
+      Example of correct format:
+      {{
+        "programName": "Beginner Full Body Strength",
+        "programDescription": "A 2-week program...",
+        "weeks": [
+          {{
+            "weekNumber": 1,
+            "days": [
+              {{
+                "dayNumber": 1,
+                "dayName": "Upper Body",
+                "isRestDay": false,
+                "circuits": [
+                  {{
+                    "circuitLetter": "A",
+                    "exercise": "Barbell Bench Press",
+                    "sets": 3,
+                    "reps": "12,10,8",
+                    "notes": "Progressive overload"
+                  }}
+                ]
+              }}
+            ]
+          }}
+        ]
+      }}`,
       inputVariables: ['userPrompt', 'weekCount'],
       partialVariables: { formatInstructions },
     })
