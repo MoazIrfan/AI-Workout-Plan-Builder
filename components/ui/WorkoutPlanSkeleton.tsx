@@ -6,7 +6,7 @@ export function WorkoutPlanSkeleton() {
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-start relative">
             <div className="h-9 w-20 bg-gray-200 rounded animate-pulse" />
-            <div className="h-10 w-24 bg-gray-200 rounded animate-pulse absolute left-1/2 -translate-x-1/2" />
+            <img src="/logo.png" alt="Maxed Logo" className="h-10 absolute left-1/2 -translate-x-1/2" />
           </div>
         </div>
       </div>
