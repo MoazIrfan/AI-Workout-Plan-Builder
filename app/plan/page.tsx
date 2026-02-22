@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useWorkoutStore } from '@/lib/store/workoutStore'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, Trash2 } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { WorkoutPlanSkeleton } from '@/components/ui/WorkoutPlanSkeleton'
 import {
   AlertDialog,
@@ -16,10 +16,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { SortableCircuitRow } from '@/components/ui/SortableCircuitRow'
 
 export default function PlanPage() {
   const router = useRouter()
-  const { currentPlan, isGenerating, clearPlan, deleteCircuit } = useWorkoutStore()
+  const { currentPlan, isGenerating, clearPlan, deleteCircuit, reorderCircuits } = useWorkoutStore()
   const [selectedWeek, setSelectedWeek] = useState(1)
   const [isHydrated, setIsHydrated] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -28,28 +42,30 @@ export default function PlanPage() {
     dayNumber: number
     index: number
   } | null>(null)
-  
+
+  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor))
+
   useEffect(() => {
     setIsHydrated(true)
   }, [])
-  
+
   useEffect(() => {
     if (isHydrated && !isGenerating && !currentPlan) {
       router.push('/')
     }
   }, [isHydrated, isGenerating, currentPlan, router])
-  
+
   if (!isHydrated || isGenerating || !currentPlan) {
     return <WorkoutPlanSkeleton />
   }
-  
+
   const currentWeekData = currentPlan.weeks.find(w => w.weekNumber === selectedWeek)
-  
+
   const handleDeleteClick = (weekNumber: number, dayNumber: number, index: number) => {
     setCircuitToDelete({ weekNumber, dayNumber, index })
     setDeleteDialogOpen(true)
   }
-  
+
   const handleConfirmDelete = () => {
     if (circuitToDelete) {
       deleteCircuit(circuitToDelete.weekNumber, circuitToDelete.dayNumber, circuitToDelete.index)
@@ -57,7 +73,16 @@ export default function PlanPage() {
       setCircuitToDelete(null)
     }
   }
-  
+
+  const handleDragEnd = (event: DragEndEvent, weekNumber: number, dayNumber: number) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      const oldIndex = Number(active.id)
+      const newIndex = Number(over.id)
+      reorderCircuits(weekNumber, dayNumber, oldIndex, newIndex)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -80,10 +105,10 @@ export default function PlanPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-8">
-        
+
         {/* Week Selector */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {currentPlan.weeks.map((week) => (
@@ -101,7 +126,7 @@ export default function PlanPage() {
             </Button>
           ))}
         </div>
-        
+
         {/* Days */}
         {currentWeekData?.days.map((day) => (
           <div key={day.dayNumber} className="mb-6">
@@ -110,70 +135,62 @@ export default function PlanPage() {
                 Day {day.dayNumber} - {day.isRestDay ? 'Rest' : day.dayName}
               </h2>
             </div>
-            
+
             {!day.isRestDay && (
               <div className="overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="px-4 py-3 text-left text-sm font-normal text-gray-600">
-                        Circuits
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-normal text-gray-600">
-                        Exercise
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-normal text-gray-600">
-                        Sets
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-normal text-gray-600">
-                        Reps
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-normal text-gray-600">
-                        Notes
-                      </th>
-                      <th className="px-4 py-3 w-20"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {day.circuits?.map((circuit, index) => (
-                      <tr key={index} className="bg-white border-gray-50 border-6">
-                        <td className="px-4 py-3 text-sm border border-gray-50">
-                          {circuit.circuitLetter}
-                        </td>
-                        <td className="px-4 py-3 text-sm border border-gray-50">
-                          {circuit.exercise}
-                        </td>
-                        <td className="px-4 py-3 text-sm border border-gray-50">
-                          {circuit.sets}
-                        </td>
-                        <td className="px-4 py-3 text-sm border border-gray-50">
-                          {circuit.reps}
-                        </td>
-                        <td className="px-4 py-3 text-sm italic text-gray-600 border border-gray-50">
-                          {circuit.notes}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleDeleteClick(selectedWeek, day.dayNumber, index)}
-                              className="text-gray-400 hover:text-red-600 transition-colors"
-                              title="Delete exercise"
-                            >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                          </div>
-                        </td>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(e) => handleDragEnd(e, selectedWeek, day.dayNumber)}
+                >
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="px-4 py-3 text-left text-sm font-normal text-gray-600">
+                          Circuits
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-normal text-gray-600">
+                          Exercise
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-normal text-gray-600">
+                          Sets
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-normal text-gray-600">
+                          Reps
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-normal text-gray-600">
+                          Notes
+                        </th>
+                        <th className="px-4 py-3 w-10"></th>
+                        <th className="px-4 py-3 w-10"></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <SortableContext
+                      items={day.circuits?.map((_, i) => String(i)) ?? []}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <tbody>
+                        {day.circuits?.map((circuit, index) => (
+                          <SortableCircuitRow
+                            key={index}
+                            circuit={circuit}
+                            index={index}
+                            weekNumber={selectedWeek}
+                            dayNumber={day.dayNumber}
+                            onDeleteClick={handleDeleteClick}
+                          />
+                        ))}
+                      </tbody>
+                    </SortableContext>
+                  </table>
+                </DndContext>
               </div>
             )}
 
           </div>
         ))}
       </div>
-      
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -185,7 +202,7 @@ export default function PlanPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-red-600 hover:bg-red-700"
             >
